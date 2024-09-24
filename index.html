@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Location Input</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    #locationButton {
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    #locationButton:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <form id="routeForm">
+    <h2>Enter Starting Point and Destination</h2>
+    <div style="display: flex; gap: 10px;">
+      <input type="text" id="start" placeholder="Enter a starting point" style="flex-grow: 1;" />
+      <button type="button" id="locationButton">Use Current Location</button>
+    </div>
+    <input type="text" id="end" placeholder="Enter a destination (e.g., 우래옥)" required />
+    <button type="submit">Show Route</button>
+  </form>
+
+  <script>
+    // 미리 정의된 장소와 좌표 목록
+    const locations = {
+      '광장시장': { lat: 37.5704, lon: 126.9990 },
+      '명동교자': { lat: 37.5635, lon: 126.9860 },
+      '진옥화 할매 원조 닭한마리': { lat: 37.5745, lon: 127.0007 },
+      '삼청동 수제비': { lat: 37.5823, lon: 126.9811 },
+      '토속촌 삼계탕': { lat: 37.5795, lon: 126.9709 },
+      '우래옥': { lat: 37.5687, lon: 126.9789 },
+      '황소고집 본점': { lat: 37.5607, lon: 126.9821 },
+      '오장동 함흥냉면': { lat: 37.5663, lon: 127.0010 },
+      '한성 칼국수': { lat: 37.5508, lon: 126.9176 },
+      '미락초': { lat: 37.5623, lon: 127.0339 }
+    };
+
+    // "현재 위치 사용" 버튼 클릭 시 위치 정보를 가져오는 함수
+    document.getElementById("locationButton").addEventListener("click", function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude.toFixed(6); // 소수점 6자리로 제한
+          const lon = position.coords.longitude.toFixed(6); // 소수점 6자리로 제한
+          document.getElementById("start").value = `From: 현재 위치 (${lat}, ${lon})`;
+        }, function() {
+          alert("Unable to retrieve your location.");
+        });
+      } else {
+        alert("Geolocation is not supported by your browser.");
+      }
+    });
+
+    // 출발지와 도착지를 좌표로 변환하여 URL 파라미터로 전달하는 함수
+    document.getElementById("routeForm").addEventListener("submit", function(event) {
+      event.preventDefault(); // 폼 기본 제출 동작 방지
+
+      let startInput = document.getElementById("start").value.trim();
+      const endInput = document.getElementById("end").value.trim();
+
+      let startLocation;
+      let startText = startInput; // 화면에 보여질 텍스트
+
+      // 사용자가 직접 입력한 출발지인지 확인
+      if (startInput.includes("현재 위치")) {
+        // 현재 위치에서 좌표만 추출
+        const coords = startInput.match(/\(([^)]+)\)/)[1];
+        const [lat, lon] = coords.split(",").map(Number);
+        startLocation = { lat, lon };
+      } else if (startInput.includes(",")) {
+        const [lat, lon] = startInput.split(",").map(Number);
+        startLocation = { lat, lon };
+        startText = `From: (${lat}, ${lon})`;
+      } else {
+        startLocation = locations[startInput];
+        startText = `From: ${startInput}`;
+      }
+
+      const endLocation = locations[endInput];
+      const endText = `To: ${endInput}`;
+
+      if (!startLocation || !endLocation) {
+        alert("Invalid location. Please select from the predefined list or use your current location.");
+        return;
+      }
+
+      const startCoords = `${startLocation.lat},${startLocation.lon}`;
+      const endCoords = `${endLocation.lat},${endLocation.lon}`;
+
+      // 출발지와 도착지를 URL에 포함하여 두 번째 페이지로 이동
+      window.location.href = `second_page.html?start=${encodeURIComponent(startCoords)}&end=${encodeURIComponent(endCoords)}&startText=${encodeURIComponent(startText)}&endText=${encodeURIComponent(endText)}`;
+    });
+  </script>
+</body>
+</html>

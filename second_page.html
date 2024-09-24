@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Route Display</title>
+  <!-- Leaflet CSS 파일 -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+  />
+  <!-- Leaflet Routing Machine CSS 파일 -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"
+  />
+  <style>
+    #map {
+      height: 80vh;
+    }
+    #routeInfo {
+      margin: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="routeInfo"></div>
+  <div id="map"></div>
+
+  <!-- Leaflet JS 파일 -->
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <!-- Leaflet Routing Machine JS 파일 -->
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+  <script>
+    // URL 파라미터로부터 출발지와 도착지 정보를 가져오는 함수
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      const start = params.get("start");
+      const end = params.get("end");
+      const startText = params.get("startText");
+      const endText = params.get("endText");
+
+      if (start && end && startText && endText) {
+        const startCoords = start.split(",").map(Number); // 출발지 좌표
+        const endCoords = end.split(",").map(Number); // 도착지 좌표
+        return { startCoords, endCoords, startText, endText };
+      } else {
+        alert("Invalid start or end coordinates");
+        return null;
+      }
+    }
+
+    // 지도를 로드하고 경로를 표시하는 함수
+    function loadMap() {
+      const locations = getQueryParams();
+      if (!locations) return;
+
+      const { startCoords, endCoords, startText, endText } = locations;
+
+      // 경로 정보 표시
+      document.getElementById("routeInfo").innerText = `${startText} → ${endText}`;
+
+      // 지도를 시작 위치로 설정
+      const map = L.map("map").setView(startCoords, 13);
+
+      // OpenStreetMap 타일 추가
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(map);
+
+      // 출발지에서 도착지까지의 경로를 표시
+      L.Routing.control({
+        waypoints: [
+          L.latLng(startCoords[0], startCoords[1]), // 출발지
+          L.latLng(endCoords[0], endCoords[1]) // 도착지
+        ],
+        routeWhileDragging: false, // 경로 드래그 가능 여부
+        show: false, // 경로 안내 패널 숨기기
+        createMarker: function() { return null; }, // 마커 제거
+        addWaypoints: false,
+        lineOptions: {
+          styles: [{ color: '#6FA1EC', weight: 4 }]
+        },
+        draggableWaypoints: false,
+        fitSelectedRoutes: true
+      }).addTo(map);
+    }
+
+    // 페이지 로드 시 지도 불러오기
+    window.onload = loadMap;
+  </script>
+</body>
+</html>
